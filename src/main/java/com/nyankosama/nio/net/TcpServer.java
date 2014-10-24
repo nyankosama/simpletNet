@@ -1,6 +1,9 @@
 package com.nyankosama.nio.net;
 
+import com.nyankosama.nio.net.Event.EventType;
 import com.nyankosama.nio.net.handler.OnMessageHandler;
+import com.nyankosama.nio.net.handler.SelectorHandler;
+import com.nyankosama.nio.net.utils.BindFunction;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -8,19 +11,27 @@ import java.net.ServerSocket;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.EnumMap;
 import java.util.Set;
 
 /**
  * Created by hlr@superid.cn on 2014/10/24.
  */
 public class TcpServer {
-    private OnMessageHandler messageHandler;
 
     private int port;
 
     private Selector selector;
 
     private volatile boolean isStop = false;
+
+    public enum EventType {
+        ON_ACCEPT,
+        ON_CONNECT,
+        ON_MESSAGE
+    }
+
+    private EnumMap<EventType, BindFunction> handlerType;
 
     public TcpServer(int port) {
         this.port = port;
@@ -43,31 +54,8 @@ public class TcpServer {
                 if (ready == 0) continue;
                 Set<SelectionKey> keys = selector.selectedKeys();
                 for (SelectionKey key : keys) {
-                    if (key.isAcceptable()) {
-                        System.out.println("on accept");
-                        ServerSocketChannel channel = (ServerSocketChannel) key.channel();
-                        SocketChannel socketChannel = channel.accept();
-                        socketChannel.configureBlocking(false);
-                        socketChannel.register(selector, SelectionKey.OP_READ);
-                    } else if (key.isReadable()) {
-                        System.out.println("on message");
-                        SocketChannel channel = (SocketChannel) key.channel();
-                        ByteBuffer buffer = ByteBuffer.allocate(512);
-                        StringBuilder builder = new StringBuilder();
-                        int read = channel.read(buffer);
-                        if (read == -1) {
-                            //handle close
-                            channel.close();
-                            key.cancel();
-                            continue;
-                        }
-                        do{
-                            builder.append(new String(buffer.array()));
-                            buffer.clear();
-                        }
-                        while ((read = channel.read(buffer)) != 0);
-                        if (messageHandler != null) messageHandler.onMessage(builder.toString(), channel);
-                    }
+                    SelectorHandler handler = (SelectorHandler) key.attachment();
+                    if (handler != null) handler.process(key);
                 }
                 keys.clear();
             }
@@ -85,5 +73,33 @@ public class TcpServer {
 
     public void setMessageHandler(OnMessageHandler messageHandler) {
         this.messageHandler = messageHandler;
+    }
+
+    public void remain() {
+        if (key.isAcceptable()) {
+            System.out.println("on accept");
+            ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+            SocketChannel socketChannel = channel.accept();
+            socketChannel.configureBlocking(false);
+            socketChannel.register(selector, SelectionKey.OP_READ);
+        } else if (key.isReadable()) {
+            System.out.println("on message");
+            SocketChannel channel = (SocketChannel) key.channel();
+            ByteBuffer buffer = ByteBuffer.allocate(512);
+            StringBuilder builder = new StringBuilder();
+            int read = channel.read(buffer);
+            if (read == -1) {
+                //handle close
+                channel.close();
+                key.cancel();
+                continue;
+            }
+            do{
+                builder.append(new String(buffer.array()));
+                buffer.clear();
+            }
+            while ((read = channel.read(buffer)) != 0);
+            if (messageHandler != null) messageHandler.onMessage(builder.toString(), channel);
+        }
     }
 }
