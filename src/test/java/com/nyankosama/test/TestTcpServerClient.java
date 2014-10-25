@@ -21,11 +21,12 @@ public class TestTcpServerClient {
         socket.connect(new InetSocketAddress("127.0.0.1", 9123));
         PrintWriter writer = new PrintWriter(socket.getOutputStream());
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        writer.println("hello world!");
-        writer.flush();
-        System.out.println("write complete!");
-        System.out.println(reader.readLine());
-        System.out.println("read complete!");
+
+        for (int i = 0; i < 5000; i++) {
+            writer.println("hello world!");
+            writer.flush();
+            System.out.println(reader.readLine());
+        }
         socket.close();
     }
 }

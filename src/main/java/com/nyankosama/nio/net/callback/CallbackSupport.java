@@ -8,7 +8,12 @@ import com.nyankosama.nio.net.TcpConnection;
  */
 public abstract class CallbackSupport implements NetCallback {
     //这些方法是用来override的
+    @Override
     public void onMessage(TcpConnection connection, TcpBuffer buffer){}
+
+    @Override
     public void onAccept(TcpConnection sourceConnection){}
+
+    @Override
     public void onConnect(TcpConnection sourceConnection){}
 }

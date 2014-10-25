@@ -1,10 +1,8 @@
 package com.nyankosama.nio.net;
 
-import com.nyankosama.nio.net.handler.OnMessageHandler;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
+import com.nyankosama.nio.net.callback.CallbackSupport;
+import com.nyankosama.nio.net.callback.NetCallback;
 
 /**
  * Created by hlr@superid.cn on 2014/10/24.
@@ -12,19 +10,13 @@ import java.nio.channels.SocketChannel;
 public class Startup {
     public static void main(String args[]) {
         TcpServer server = new TcpServer(9123);
-        server.setMessageHandler(new OnMessageHandler() {
+        NetCallback callback = new CallbackSupport() {
             @Override
-            public void onMessage(String fullMessage, SocketChannel channel) {
-                ByteBuffer buffer = ByteBuffer.allocate(512);
-                buffer.put(fullMessage.getBytes());
-                buffer.flip();
-                try {
-                    channel.write(buffer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            public void onMessage(TcpConnection connection, TcpBuffer buffer) {
+                connection.send(buffer.retrieveAllAsString());
             }
-        });
+        };
+        server.setCallback(callback);
         server.startServer();
     }
 }

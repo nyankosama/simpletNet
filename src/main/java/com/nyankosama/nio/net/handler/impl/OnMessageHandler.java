@@ -1,9 +1,11 @@
 package com.nyankosama.nio.net.handler.impl;
 
 import com.nyankosama.nio.net.TcpBuffer;
+import com.nyankosama.nio.net.TcpConnection;
 import com.nyankosama.nio.net.callback.NetCallback;
 import com.nyankosama.nio.net.handler.SelectorHandler;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -25,25 +27,31 @@ public class OnMessageHandler implements SelectorHandler{
     @Override
     public void process(SelectionKey key) {
         try {
-            System.out.println("on message");
             SocketChannel channel = (SocketChannel) key.channel();
             //FIXME 使用对象池
             ByteBuffer buffer = ByteBuffer.allocate(TcpBuffer.FIXED_BUFFER_SIZE);
-            //TODO Buffer连接
-            StringBuilder builder = new StringBuilder();
+            //FIXME 使用ByteArrayOutputStream，不知效率如何
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             int read = channel.read(buffer);
             if (read == -1) {
                 //handle close
+                System.out.println("on close");
                 channel.close();
                 key.cancel();
-                continue;
+                return;
             }
+            System.out.println("on message");
             do {
-                builder.append(new String(buffer.array()));
+                outputStream.write(buffer.array());
                 buffer.clear();
             }
             while ((read = channel.read(buffer)) != 0);
-            if (messageHandler != null) messageHandler.onMessage(builder.toString(), channel);
+            if (callback != null) {
+                TcpConnection tcpConnection = new TcpConnection(channel, key);
+                //FIXME 有一次arraycopy
+                TcpBuffer tcpBuffer = new TcpBuffer(outputStream.toByteArray());
+                callback.onMessage(tcpConnection, tcpBuffer);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

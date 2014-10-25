@@ -8,18 +8,18 @@ import java.nio.ByteBuffer;
 public class TcpBuffer {
     public static final int FIXED_BUFFER_SIZE = 1024;
     //FIXME 应该用对象池
-    private ByteBuffer buffer;
+    private byte[] bytes;
 
-    public TcpBuffer(ByteBuffer buffer) {
-        this.buffer = buffer;
+    public TcpBuffer(byte[] bytes) {
+        this.bytes = bytes;
     }
 
     private byte[] retrieveAllAsBytes() {
-        return buffer.array();
+        return bytes;
     }
 
     public String retrieveAllAsString() {
-        return new String(buffer.array());
+        return new String(bytes);
     }
 
     public int readAsInt16() {
