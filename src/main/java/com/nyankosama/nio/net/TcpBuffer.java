@@ -1,6 +1,5 @@
 package com.nyankosama.nio.net;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
@@ -8,7 +7,6 @@ import java.util.Arrays;
  */
 public class TcpBuffer {
     public static final int FIXED_BUFFER_SIZE = 1024;
-    //FIXME 应该用对象池
     private byte[] bytes;
     private int size;
 

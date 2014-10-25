@@ -23,7 +23,7 @@ public class TestTcpServerClient {
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         long begin = System.currentTimeMillis();
-        int num = 50000;
+        int num = 500000;
         for (int i = 0; i < num; i++) {
             writer.println("hello world!");
             writer.flush();
