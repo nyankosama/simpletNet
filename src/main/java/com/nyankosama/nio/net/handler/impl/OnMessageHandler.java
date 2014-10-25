@@ -4,6 +4,7 @@ import com.nyankosama.nio.net.TcpBuffer;
 import com.nyankosama.nio.net.TcpConnection;
 import com.nyankosama.nio.net.callback.NetCallback;
 import com.nyankosama.nio.net.handler.SelectorHandler;
+import com.nyankosama.nio.net.utils.NoCopyByteArrayOutputStream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,16 +32,16 @@ public class OnMessageHandler implements SelectorHandler{
             //FIXME 使用对象池
             ByteBuffer buffer = ByteBuffer.allocate(TcpBuffer.FIXED_BUFFER_SIZE);
             //FIXME 使用ByteArrayOutputStream，不知效率如何
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            NoCopyByteArrayOutputStream outputStream = new NoCopyByteArrayOutputStream(TcpBuffer.FIXED_BUFFER_SIZE);
             int read = channel.read(buffer);
             if (read == -1) {
                 //handle close
-                System.out.println("on close");
+//                System.out.println("on close");
                 channel.close();
                 key.cancel();
                 return;
             }
-            System.out.println("on message");
+//            System.out.println("on message");
             do {
                 outputStream.write(buffer.array());
                 buffer.clear();
@@ -48,8 +49,8 @@ public class OnMessageHandler implements SelectorHandler{
             while ((read = channel.read(buffer)) != 0);
             if (callback != null) {
                 TcpConnection tcpConnection = new TcpConnection(channel, key);
-                //FIXME 有一次arraycopy
-                TcpBuffer tcpBuffer = new TcpBuffer(outputStream.toByteArray());
+                //NOTE TcpBuffer和ByteArrayOutputStream共享一个buf
+                TcpBuffer tcpBuffer = new TcpBuffer(outputStream.getBuf(), outputStream.size());
                 callback.onMessage(tcpConnection, tcpBuffer);
             }
         } catch (IOException e) {

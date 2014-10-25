@@ -35,7 +35,7 @@ public class OnAcceptHandler implements SelectorHandler{
 
     @Override
     public void process(SelectionKey key) throws IOException {
-        System.out.println("on accept");
+//        System.out.println("on accept");
         if (onMessageHandler == null) return;
 
         ServerSocketChannel channel = (ServerSocketChannel) key.channel();

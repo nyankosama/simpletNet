@@ -22,11 +22,15 @@ public class TestTcpServerClient {
         PrintWriter writer = new PrintWriter(socket.getOutputStream());
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        for (int i = 0; i < 5000; i++) {
+        long begin = System.currentTimeMillis();
+        int num = 50000;
+        for (int i = 0; i < num; i++) {
             writer.println("hello world!");
             writer.flush();
-            System.out.println(reader.readLine());
+            reader.readLine();
         }
         socket.close();
+        long end = System.currentTimeMillis();
+        System.out.println("cost time:" + (end - begin) + " ms, qps:" + ((double)num / (end - begin) * 1000));
     }
 }

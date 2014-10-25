@@ -20,7 +20,7 @@ public class OnConnectHandler implements SelectorHandler {
 
     @Override
     public void process(SelectionKey key) throws IOException {
-        System.out.println("on connect");
+//        System.out.println("on connect");
         if (callback != null) {
             TcpConnection tcpConnection = new TcpConnection((java.nio.channels.SocketChannel) key.channel(), key);
             callback.onConnect(tcpConnection);
