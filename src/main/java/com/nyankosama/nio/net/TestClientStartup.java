@@ -1,4 +1,4 @@
-package com.nyankosama.test;
+package com.nyankosama.nio.net;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.net.Socket;
 /**
  * Created by hlr@superid.cn on 2014/10/24.
  */
-public class TestTcpServerClient {
+public class TestClientStartup {
 
     public static void main(String args[]) throws IOException {
         testClient();
