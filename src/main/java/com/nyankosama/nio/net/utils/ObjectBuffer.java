@@ -105,8 +105,13 @@ public class ObjectBuffer<T> {
         //NOTE 使得capacity变为原来两倍，添加原来的capacity那么多的初始化对象进入pool
         tail += capacity;
         size += capacity;
+        ArrayList<T> tmp = objectBuf;
+        objectBuf = new ArrayList<>(capacity * 2);
         for (int i = 0; i < capacity; i++) {
             objectBuf.add(objectCreate.call());
+        }
+        for (int i = capacity; i < capacity * 2; i++) {
+            objectBuf.add(tmp.get(i - capacity));
         }
         capacity *= 2;
     }
