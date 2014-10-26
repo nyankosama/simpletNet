@@ -13,12 +13,13 @@ import java.net.Socket;
 public class TestClientStartup {
 
     public static void main(String args[]) throws IOException {
-        testClient();
-    }
-
-    public static void testClient() throws IOException {
+        if (args.length != 2) {
+            System.out.println("ip arg needed!");
+            System.exit(1);
+        }
+        String ip = args[1];
         Socket socket = new Socket();
-        socket.connect(new InetSocketAddress("127.0.0.1", 9123));
+        socket.connect(new InetSocketAddress(ip, 9123));
         PrintWriter writer = new PrintWriter(socket.getOutputStream());
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -31,6 +32,6 @@ public class TestClientStartup {
         }
         socket.close();
         long end = System.currentTimeMillis();
-        System.out.println("cost time:" + (end - begin) + " ms, qps:" + ((double)num / (end - begin) * 1000));
+        System.out.println("cost time:" + (end - begin) + " ms, qps:" + ((double) num / (end - begin) * 1000));
     }
 }
