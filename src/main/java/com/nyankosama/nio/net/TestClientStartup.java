@@ -14,17 +14,18 @@ public class TestClientStartup {
 
     public static void main(String args[]) throws IOException {
         if (args.length != 2) {
-            System.out.println("ip arg needed!");
+            System.out.println("Usage: ./clientStartup.sh ip request-num");
             System.exit(1);
         }
-        String ip = args[1];
+        String ip = args[0];
+        int requestNum = Integer.parseInt(args[1]);
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress(ip, 9123));
         PrintWriter writer = new PrintWriter(socket.getOutputStream());
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         long begin = System.currentTimeMillis();
-        int num = 50000;
+        int num = requestNum;
         for (int i = 0; i < num; i++) {
             writer.println("hello world!");
             writer.flush();
