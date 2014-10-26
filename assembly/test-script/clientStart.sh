@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#set connection ip
+IP="$1"
+
 #set HOME
 CURR_DIR=`pwd`
 cd `dirname "$0"`/..
@@ -22,7 +25,7 @@ done
 #startup Server
 RUN_CMD="\"$JAVA_HOME/bin/java\""
 RUN_CMD="$RUN_CMD -classpath \"$NET_CLASSPATH\""
-RUN_CMD="$RUN_CMD com.nyankosama.nio.net.TestClientStartup $@"
+RUN_CMD="$RUN_CMD com.nyankosama.nio.net.TestClientStartup $IP $@"
 echo $RUN_CMD
 eval $RUN_CMD
 #==============================================================================

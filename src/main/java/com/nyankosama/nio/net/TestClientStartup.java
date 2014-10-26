@@ -23,7 +23,7 @@ public class TestClientStartup {
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         long begin = System.currentTimeMillis();
-        int num = 500000;
+        int num = 50000;
         for (int i = 0; i < num; i++) {
             writer.println("hello world!");
             writer.flush();
