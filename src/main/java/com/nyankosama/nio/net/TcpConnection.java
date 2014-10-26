@@ -1,5 +1,8 @@
 package com.nyankosama.nio.net;
 
+import com.nyankosama.nio.net.utils.ByteBufferFactory;
+import com.nyankosama.nio.net.utils.ObjectBuffer;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -9,17 +12,14 @@ import java.nio.channels.SocketChannel;
  * Created by hlr@superid.cn on 2014/10/24.
  */
 
-//FIXME 这里应该用对象池。。
 public class TcpConnection {
     private SocketChannel channel;
     private SelectionKey selectionKey;
-    private ByteBuffer buffer;//FIXME 是否可以重用TcpBuffer中的ByteBuffer？
+    private ObjectBuffer<ByteBuffer> objectBuffer = ByteBufferFactory.getObjectBuffer();
 
     public TcpConnection(SocketChannel channel, SelectionKey key) {
         this.channel = channel;
         this.selectionKey = key;
-        //FIXME 应该使用对象池
-        this.buffer = ByteBuffer.allocate(TcpBuffer.FIXED_BUFFER_SIZE);
     }
 
     public final void reset(SocketChannel channel, SelectionKey selectionKey){
@@ -28,23 +28,27 @@ public class TcpConnection {
     }
 
     public final void send(String msg){
-        resetBufferForWrite(msg.getBytes());
+        ByteBuffer buffer = objectBuffer.getObject();
+        resetBufferForWrite(buffer, msg.getBytes());
         try {
             channel.write(buffer);
         } catch (IOException e) {
             //FIXME 异常处理
             e.printStackTrace();
         }
+        objectBuffer.returnObject(buffer);
     }
 
     public final void send(byte[] bytes){
-        resetBufferForWrite(bytes);
+        ByteBuffer buffer = objectBuffer.getObject();
+        resetBufferForWrite(buffer, bytes);
         try {
             channel.write(buffer);
         } catch (IOException e) {
             //FIXME 异常处理
             e.printStackTrace();
         }
+        objectBuffer.returnObject(buffer);
     }
 
     public final void close() {
@@ -57,7 +61,7 @@ public class TcpConnection {
         }
     }
 
-    private void resetBufferForWrite(byte[] bytes) {
+    private void resetBufferForWrite(ByteBuffer buffer, byte[] bytes) {
         buffer.clear();
         buffer.put(bytes);
         buffer.flip();
