@@ -10,6 +10,8 @@ import com.nyankosama.nio.net.utils.CommonUtils;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -38,6 +40,22 @@ public class TestCommonUtils {
                 lock.lock();
             } finally {
                 lock.unlock();
+            }
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("cost time:" + (end - begin) + " ms, qps:" + ((double) 50000 / (end - begin) * 1000));
+    }
+
+    @Test
+    public void testBlockingQueue() {
+        BlockingQueue<Integer> queue = new LinkedBlockingQueue<>();
+        long begin = System.currentTimeMillis();
+        for (int i = 0; i < 50000; i++) {
+            try {
+                queue.put(1);
+                queue.take();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
         long end = System.currentTimeMillis();
