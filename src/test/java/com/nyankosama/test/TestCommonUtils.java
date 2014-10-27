@@ -24,4 +24,9 @@ public class TestCommonUtils {
         };
         assert CommonUtils.decideCallbackOverride(callback, NetCallback.ON_MESSAGE) == true;
     }
+
+    @Test
+    public void testCommon() {
+        ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
+    }
 }

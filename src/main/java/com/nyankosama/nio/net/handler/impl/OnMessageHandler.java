@@ -4,9 +4,8 @@ import com.nyankosama.nio.net.TcpBuffer;
 import com.nyankosama.nio.net.TcpConnection;
 import com.nyankosama.nio.net.callback.NetCallback;
 import com.nyankosama.nio.net.handler.SelectorHandler;
-import com.nyankosama.nio.net.utils.ByteBufferFactory;
+import com.nyankosama.nio.net.utils.ByteBufferThreadLocal;
 import com.nyankosama.nio.net.utils.NoCopyByteArrayOutputStream;
-import com.nyankosama.nio.net.utils.ObjectBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -18,7 +17,6 @@ import java.nio.channels.SocketChannel;
  */
 public class OnMessageHandler implements SelectorHandler{
 
-    private ObjectBuffer<ByteBuffer> objectBuffer = ByteBufferFactory.getObjectBuffer();
     private NetCallback callback;
 
     public OnMessageHandler() {
@@ -32,7 +30,7 @@ public class OnMessageHandler implements SelectorHandler{
     public void process(SelectionKey key) {
         try {
             SocketChannel channel = (SocketChannel) key.channel();
-            ByteBuffer buffer = objectBuffer.getObject();
+            ByteBuffer buffer = ByteBufferThreadLocal.getInstance().get();
             NoCopyByteArrayOutputStream outputStream = new NoCopyByteArrayOutputStream(TcpBuffer.FIXED_BUFFER_SIZE);
             int read = channel.read(buffer);
             if (read == -1) {
@@ -54,7 +52,6 @@ public class OnMessageHandler implements SelectorHandler{
                 TcpBuffer tcpBuffer = new TcpBuffer(outputStream.getBuf(), outputStream.size());
                 callback.onMessage(tcpConnection, tcpBuffer);
             }
-            objectBuffer.returnObject(buffer);
         } catch (IOException e) {
             e.printStackTrace();
         }
