@@ -21,15 +21,18 @@ public class TestClientStartup {
         int requestNum = Integer.parseInt(args[1]);
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress(ip, 9123));
+        System.out.println("connect");
         PrintWriter writer = new PrintWriter(socket.getOutputStream());
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         long begin = System.currentTimeMillis();
         int num = requestNum;
         for (int i = 0; i < num; i++) {
-            writer.println("hello world!");
-            writer.flush();
-            reader.readLine();
+//            writer.println("hello world!");
+//            writer.flush();
+//            System.out.println("write");
+//            reader.readLine();
+//            System.out.println("read");
         }
         socket.close();
         long end = System.currentTimeMillis();

@@ -6,6 +6,7 @@ import com.nyankosama.nio.net.callback.NetCallback;
 import com.nyankosama.nio.net.handler.SelectorHandler;
 import com.nyankosama.nio.net.utils.ByteBufferThreadLocal;
 import com.nyankosama.nio.net.utils.NoCopyByteArrayOutputStream;
+import com.nyankosama.nio.net.utils.SynchronizedPrintln;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -35,12 +36,12 @@ public class OnMessageHandler implements SelectorHandler{
             int read = channel.read(buffer);
             if (read == -1) {
                 //handle close
-//                System.out.println("on close");
+                SynchronizedPrintln.println("on close");
                 channel.close();
                 key.cancel();
                 return;
             }
-//            System.out.println("on message");
+            SynchronizedPrintln.println("on message");
             do {
                 outputStream.write(buffer.array());
                 buffer.clear();

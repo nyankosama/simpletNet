@@ -8,6 +8,8 @@ import com.nyankosama.nio.net.utils.CommonUtils;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by hlr@superid.cn on 2014/10/25.
@@ -27,6 +29,16 @@ public class TestCommonUtils {
 
     @Test
     public void testCommon() {
-        ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
+        Lock lock = new ReentrantLock();
+        long begin = System.currentTimeMillis();
+        for (int i = 0; i < 50000; i++) {
+            try {
+                lock.lock();
+            } finally {
+                lock.unlock();
+            }
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("cost time:" + (end - begin) + " ms, qps:" + ((double) 50000 / (end - begin) * 1000));
     }
 }
