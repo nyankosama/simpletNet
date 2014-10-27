@@ -18,7 +18,6 @@ public final class ByteBufferThreadLocal extends ThreadLocal<ByteBuffer> {
 
     @Override
     protected final ByteBuffer initialValue() {
-//        System.out.println("initialValue thread=" + Thread.currentThread().getName());
         return ByteBuffer.allocate(TcpBuffer.FIXED_BUFFER_SIZE);
     }
 
