@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream;
 /**
  * Created by hlr@superid.cn on 2014/10/25.
  */
-public class NoCopyByteArrayOutputStream extends ByteArrayOutputStream {
+public final class NoCopyByteArrayOutputStream extends ByteArrayOutputStream {
 
     public NoCopyByteArrayOutputStream() {
         super();
@@ -15,7 +15,7 @@ public class NoCopyByteArrayOutputStream extends ByteArrayOutputStream {
         super(size);
     }
 
-    public byte[] getBuf() {
+    public final byte[] getBuf() {
         return buf;
     }
 }

@@ -5,7 +5,9 @@ import com.nyankosama.nio.net.handler.SelectorHandler;
 import com.nyankosama.nio.net.handler.impl.OnAcceptHandler;
 import com.nyankosama.nio.net.handler.impl.OnConnectHandler;
 import com.nyankosama.nio.net.handler.impl.OnMessageHandler;
+import com.nyankosama.nio.net.utils.BindFunction;
 import com.nyankosama.nio.net.utils.CommonUtils;
+import com.nyankosama.nio.net.utils.LockFreeBlockingQueue;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -27,6 +29,10 @@ public class TcpServer {
 
     private NetCallback callback;
 
+    private InnerWorkThread workThreads[];
+
+    private static final int WORK_QUEUE_CAPACITY = 100;
+
     public TcpServer(int port) {
         this.port = port;
     }
@@ -36,6 +42,14 @@ public class TcpServer {
     }
 
     private void initServer() {
+        int workThreadSize = Runtime.getRuntime().availableProcessors() + 1;
+        workThreads = new InnerWorkThread[workThreadSize];
+        for (int i = 0; i < workThreadSize; i++) {
+            workThreads[i] = new InnerWorkThread(
+                    new LockFreeBlockingQueue<BindFunction>(WORK_QUEUE_CAPACITY));
+            workThreads[i].start();
+        }
+
         try {
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress("0.0.0.0", port));
@@ -73,23 +87,22 @@ public class TcpServer {
     }
 
     public void startServer() {
+        //NOTE 单线程accept，多工作线程处理handler，通过round robin的方式决定处理工作线程
         System.out.println("start server");
         initServer();
+        int curIndex = workThreads.length - 1;
+        int maxSize = workThreads.length;
         try {
             while (!isStop) {
                 int ready = selector.select();
                 if (ready == 0) continue;
-//                Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-//                while (iterator.hasNext()) {
-//                    SelectionKey key = iterator.next();
-//                    SelectorHandler handler = (SelectorHandler) key.attachment();
-//                    if (handler != null) handler.process(key);
-//                    iterator.remove();
-//                }
                 Set<SelectionKey> keys = selector.selectedKeys();
                 for (SelectionKey key : keys) {
                     SelectorHandler handler = (SelectorHandler) key.attachment();
-                    if (handler != null) handler.process(key);
+                    if (handler != null){
+                        BindFunction function = BindFunction.bind(handler, "process", key);
+                        workThreads[curIndex = roundRobinIndex(curIndex, maxSize)].putWork(function);
+                    }
                 }
                 //FIXME 没有使用iterator.remove可能会存在问题
                 keys.clear();
@@ -105,5 +118,38 @@ public class TcpServer {
     public void stopServer() {
         System.out.println("stop server");
         this.isStop = true;
+    }
+
+    private int roundRobinIndex(int curIndex, int maxSize) {
+        if (curIndex == maxSize - 1) return 0;
+        return curIndex + 1;
+    }
+
+    private static class InnerWorkThread extends Thread {
+        private LockFreeBlockingQueue<BindFunction> workQueue;
+
+        public InnerWorkThread(LockFreeBlockingQueue<BindFunction> workQueue) {
+            this.workQueue = workQueue;
+        }
+
+        public void putWork(BindFunction function) {
+            try {
+                workQueue.put(function);
+            } catch (InterruptedException e) {
+                //NOTE 忽略中断
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+            try {
+                BindFunction function = workQueue.take();
+                function.call();
+            } catch (InterruptedException e) {
+                //NOTE 忽略中断
+                e.printStackTrace();
+            }
+        }
     }
 }

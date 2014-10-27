@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 /**
  * Created by hlr@superid.cn on 2014/10/27.
  */
-public class ByteBufferThreadLocal extends ThreadLocal<ByteBuffer> {
+public final class ByteBufferThreadLocal extends ThreadLocal<ByteBuffer> {
     private static ByteBufferThreadLocal instance = new ByteBufferThreadLocal();
 
     private ByteBufferThreadLocal(){}
@@ -17,12 +17,12 @@ public class ByteBufferThreadLocal extends ThreadLocal<ByteBuffer> {
     }
 
     @Override
-    protected ByteBuffer initialValue() {
+    protected final ByteBuffer initialValue() {
         return ByteBuffer.allocate(TcpBuffer.FIXED_BUFFER_SIZE);
     }
 
     @Override
-    public ByteBuffer get() {
+    public final ByteBuffer get() {
         ByteBuffer buffer = super.get();
         buffer.clear();
         return buffer;
