@@ -28,10 +28,10 @@ public class TestClientStartup {
         long begin = System.currentTimeMillis();
         int num = requestNum;
         for (int i = 0; i < num; i++) {
-//            writer.println("hello world!");
-//            writer.flush();
+            writer.println("hello world!");
+            writer.flush();
 //            System.out.println("write");
-//            reader.readLine();
+            reader.readLine();
 //            System.out.println("read");
         }
         socket.close();

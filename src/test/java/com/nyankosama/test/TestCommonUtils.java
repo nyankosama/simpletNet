@@ -1,9 +1,11 @@
 package com.nyankosama.test;
 
+import com.esotericsoftware.reflectasm.MethodAccess;
 import com.nyankosama.nio.net.TcpBuffer;
 import com.nyankosama.nio.net.TcpConnection;
 import com.nyankosama.nio.net.callback.CallbackSupport;
 import com.nyankosama.nio.net.callback.NetCallback;
+import com.nyankosama.nio.net.utils.BindFunction;
 import com.nyankosama.nio.net.utils.CommonUtils;
 import org.junit.Test;
 
@@ -40,5 +42,35 @@ public class TestCommonUtils {
         }
         long end = System.currentTimeMillis();
         System.out.println("cost time:" + (end - begin) + " ms, qps:" + ((double) 50000 / (end - begin) * 1000));
+    }
+
+    private static class Base {
+        public void print() {
+            System.out.println("base");
+        }
+
+        public void basePrint() {
+
+        }
+    }
+
+    private static class Sub extends Base {
+        @Override
+        public void print() {
+            System.out.println("sub");
+        }
+
+        public void subPrint() {
+
+        }
+    }
+
+    @Test
+    public void testBindFunction() {
+        Sub ptr = new Sub();
+        MethodAccess ma = MethodAccess.get(ptr.getClass());
+        int index = ma.getIndex("print");
+        String names[] = ma.getMethodNames();
+        ma.invoke(ptr, index);
     }
 }

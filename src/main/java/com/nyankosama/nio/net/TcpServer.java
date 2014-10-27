@@ -5,7 +5,6 @@ import com.nyankosama.nio.net.handler.SelectorHandler;
 import com.nyankosama.nio.net.handler.impl.OnAcceptHandler;
 import com.nyankosama.nio.net.handler.impl.OnConnectHandler;
 import com.nyankosama.nio.net.handler.impl.OnMessageHandler;
-import com.nyankosama.nio.net.utils.BindFunction;
 import com.nyankosama.nio.net.utils.CommonUtils;
 import com.nyankosama.nio.net.utils.SynchronizedPrintln;
 
@@ -14,11 +13,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by hlr@superid.cn on 2014/10/24.
@@ -33,11 +28,6 @@ public class TcpServer {
 
     private NetCallback callback;
 
-    private InnerWorkThread workThreads[];
-
-    private static final int WORK_QUEUE_CAPACITY = 100;
-    private static final int WORK_THREAD_SIZE = Runtime.getRuntime().availableProcessors() + 1;
-
     public TcpServer(int port) {
         this.port = port;
     }
@@ -47,11 +37,6 @@ public class TcpServer {
     }
 
     private void initServer() {
-        workThreads = new InnerWorkThread[WORK_THREAD_SIZE];
-        for (int i = 0; i < WORK_THREAD_SIZE; i++) {
-            workThreads[i] = new InnerWorkThread();
-            workThreads[i].start();
-        }
 
         try {
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
@@ -93,32 +78,17 @@ public class TcpServer {
         //NOTE 单线程accept，多工作线程处理handler，通过round robin的方式决定处理工作线程
         SynchronizedPrintln.println("start server");
         initServer();
-        int curIndex = workThreads.length - 1;
-        int maxSize = workThreads.length;
         try {
             while (!isStop) {
                 int ready = selector.select();
                 if (ready == 0) continue;
                 Set<SelectionKey> keys = selector.selectedKeys();
-                Iterator<SelectionKey> iterator = keys.iterator();
-                while (iterator.hasNext()) {
-                    SelectionKey key = iterator.next();
+                for (SelectionKey key : keys) {
                     SelectorHandler handler = (SelectorHandler) key.attachment();
-                    if (handler != null){
-                        BindFunction function = BindFunction.bind(handler, "process", key);
-                        workThreads[curIndex = roundRobinIndex(curIndex, maxSize)].putWork(function);
-                    }
-                    iterator.remove();
+                    if (handler != null) handler.process(key);
                 }
-//                for (SelectionKey key : keys) {
-//                    SelectorHandler handler = (SelectorHandler) key.attachment();
-//                    if (handler != null){
-//                        BindFunction function = BindFunction.bind(handler, "process", key);
-//                        workThreads[curIndex = roundRobinIndex(curIndex, maxSize)].putWork(function);
-//                    }
-//                }
-//                //FIXME 没有使用iterator.remove可能会存在问题
-//                keys.clear();
+                //FIXME 没有使用iterator.remove可能会存在问题
+                keys.clear();
             }
 
         } catch (IOException e) {
@@ -133,38 +103,4 @@ public class TcpServer {
         this.isStop = true;
     }
 
-    private int roundRobinIndex(int curIndex, int maxSize) {
-        if (curIndex == maxSize - 1) return 0;
-        return curIndex + 1;
-    }
-
-    private static class InnerWorkThread extends Thread {
-        private BlockingQueue<BindFunction> workQueue;
-
-        public InnerWorkThread() {
-            this.workQueue = new ArrayBlockingQueue<>(WORK_QUEUE_CAPACITY);
-        }
-
-        public void putWork(BindFunction function) {
-            SynchronizedPrintln.println("put work!. thread=" + Thread.currentThread().getName());
-            try {
-                workQueue.put(function);
-            } catch (InterruptedException e) {
-                //NOTE 忽略中断
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void run() {
-            try {
-                BindFunction function = workQueue.take();
-                SynchronizedPrintln.println("take! thread=" + Thread.currentThread().getName());
-                function.call();
-            } catch (InterruptedException e) {
-                //NOTE 忽略中断
-                e.printStackTrace();
-            }
-        }
-    }
 }

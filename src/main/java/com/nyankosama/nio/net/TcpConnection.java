@@ -14,7 +14,6 @@ import java.nio.channels.SocketChannel;
 public class TcpConnection {
     private SocketChannel channel;
     private SelectionKey selectionKey;
-    private ByteBuffer buffer = ByteBufferThreadLocal.getInstance().get();
 
     public TcpConnection(SocketChannel channel, SelectionKey key) {
         this.channel = channel;
@@ -27,6 +26,7 @@ public class TcpConnection {
     }
 
     public final void send(String msg){
+        ByteBuffer buffer = ByteBufferThreadLocal.getInstance().get();
         resetBufferForWrite(buffer, msg.getBytes());
         try {
             channel.write(buffer);
@@ -37,6 +37,7 @@ public class TcpConnection {
     }
 
     public final void send(byte[] bytes){
+        ByteBuffer buffer = ByteBufferThreadLocal.getInstance().get();
         resetBufferForWrite(buffer, bytes);
         try {
             channel.write(buffer);

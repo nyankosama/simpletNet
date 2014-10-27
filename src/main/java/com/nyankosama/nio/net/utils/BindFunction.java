@@ -32,7 +32,8 @@ public class BindFunction<T> {
     private BindFunction(Object methodInstance, String methodName, Object... args){
         MethodAccess ma = MethodAccess.get(methodInstance.getClass());
         int index = ma.getIndex(methodName);
-        checkMethodDuplicated(ma, methodName);
+        //FIXME 不检查方法重名，如果重名，则默认调用override过的方法或者同一个类中重名的第一个方法
+//        checkMethodDuplicated(ma, methodName);
         initFiled(ma, index, methodInstance, args);
     }
 

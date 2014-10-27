@@ -36,20 +36,20 @@ public class OnAcceptHandler implements SelectorHandler{
 
     @Override
     public void process(SelectionKey key) throws IOException {
-        SynchronizedPrintln.println("on accept");
+//        SynchronizedPrintln.println("on accept");
         if (onMessageHandler == null) return;
         ServerSocketChannel channel = (ServerSocketChannel) key.channel();
         SocketChannel socketChannel = channel.accept();
-        SynchronizedPrintln.println("channel == null: " + (socketChannel == null));
+//        SynchronizedPrintln.println("channel == null: " + (socketChannel == null));
         socketChannel.configureBlocking(false);
-        SynchronizedPrintln.println("set non-blocking end");
+//        SynchronizedPrintln.println("set non-blocking end");
         socketChannel.register(selector, SelectionKey.OP_READ, onMessageHandler);
-        SynchronizedPrintln.println("accept register end");
+//        SynchronizedPrintln.println("accept register end");
         if (onAcceptCallback != null) {
             TcpConnection tcpConnection = new TcpConnection(socketChannel, key);
             tcpConnection.reset(socketChannel, key);
             onAcceptCallback.onAccept(tcpConnection);
         }
-        SynchronizedPrintln.println("on accept end");
+//        SynchronizedPrintln.println("on accept end");
     }
 }
