@@ -26,8 +26,7 @@ public class OnMessageHandler implements SelectorHandler{
     private int curWorkIndex = 0;
 
     private static final int WORK_QUEUE_CAPACITY = 100;
-    private static final int WORK_THREAD_SIZE = Runtime.getRuntime().availableProcessors() + 1;
-
+    private static final int WORK_THREAD_SIZE = Runtime.getRuntime().availableProcessors() * 2;
     public OnMessageHandler() {
         this(null);
     }
