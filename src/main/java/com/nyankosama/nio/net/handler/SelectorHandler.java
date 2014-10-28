@@ -1,9 +1,7 @@
 package com.nyankosama.nio.net.handler;
 
-import com.nyankosama.nio.net.callback.NetCallback;
-import com.nyankosama.nio.net.utils.BindFunction;
-
 import java.io.IOException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 
 /**
@@ -13,4 +11,5 @@ public interface SelectorHandler {
 
     public void process(SelectionKey key) throws IOException;
 
+    public void registerTask(SelectableChannel channel);
 }

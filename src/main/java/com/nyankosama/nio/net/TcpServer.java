@@ -22,7 +22,7 @@ public class TcpServer {
 
     private int port;
 
-    private Selector selector;
+    private Selector acceptSelector;
 
     private volatile boolean isStop = false;
 
@@ -42,32 +42,27 @@ public class TcpServer {
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress("0.0.0.0", port));
             serverSocketChannel.configureBlocking(false);
-            selector = Selector.open();
+            acceptSelector = Selector.open();
 
-            int selectionKeyOp = SelectionKey.OP_ACCEPT;
             SelectorHandler onAcceptHandler = null;
             SelectorHandler onConnectHandler = null;
             SelectorHandler onMessageHandler = null;
             if (callback != null) {
-                if (CommonUtils.decideCallbackOverride(callback, NetCallback.ON_CONNECT)) {
-                    selectionKeyOp |= SelectionKey.OP_CONNECT;
-                    onConnectHandler = new OnConnectHandler(callback);
-                }
                 if (CommonUtils.decideCallbackOverride(callback, NetCallback.ON_MESSAGE)) {
                     onMessageHandler = new OnMessageHandler(callback);
                 }
                 if (CommonUtils.decideCallbackOverride(callback, NetCallback.ON_ACCET)) {
-                    onAcceptHandler = new OnAcceptHandler(selector, onMessageHandler, callback);
+                    onAcceptHandler = new OnAcceptHandler(acceptSelector, onMessageHandler, callback);
                 } else {
-                    onAcceptHandler = new OnAcceptHandler(selector, onMessageHandler);
+                    onAcceptHandler = new OnAcceptHandler(acceptSelector, onMessageHandler);
                 }
             } else {
-                onAcceptHandler = new OnAcceptHandler(selector);
+                onAcceptHandler = new OnAcceptHandler(acceptSelector);
             }
 
             if (onConnectHandler != null)
-                serverSocketChannel.register(selector, SelectionKey.OP_CONNECT, onConnectHandler);
-            serverSocketChannel.register(selector, selectionKeyOp, onAcceptHandler);
+                serverSocketChannel.register(acceptSelector, SelectionKey.OP_CONNECT, onConnectHandler);
+            serverSocketChannel.register(acceptSelector, SelectionKey.OP_ACCEPT, onAcceptHandler);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -80,9 +75,10 @@ public class TcpServer {
         initServer();
         try {
             while (!isStop) {
-                int ready = selector.select();
+                //NOTE 这里只处理Accept任务
+                int ready = acceptSelector.select();
                 if (ready == 0) continue;
-                Set<SelectionKey> keys = selector.selectedKeys();
+                Set<SelectionKey> keys = acceptSelector.selectedKeys();
                 for (SelectionKey key : keys) {
                     SelectorHandler handler = (SelectorHandler) key.attachment();
                     if (handler != null) handler.process(key);

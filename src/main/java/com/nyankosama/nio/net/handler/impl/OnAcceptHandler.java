@@ -5,29 +5,24 @@ import com.nyankosama.nio.net.callback.NetCallback;
 import com.nyankosama.nio.net.handler.SelectorHandler;
 
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 
 /**
  * Created by hlr@superid.cn on 2014/10/24.
  */
-public class OnAcceptHandler implements SelectorHandler{
+public class OnAcceptHandler extends AbstractSelectorHandler{
     private SelectorHandler onMessageHandler;
     private NetCallback onAcceptCallback;
-    private Selector selector;
 
     public OnAcceptHandler(Selector selector) {
-        this(selector, null, null);
+        this(null, null);
     }
 
-    public OnAcceptHandler(Selector selector, SelectorHandler onMessageHandler) {
-        this(selector, onMessageHandler, null);
+    public OnAcceptHandler(SelectorHandler onMessageHandler) {
+        this(onMessageHandler, null);
     }
 
-    public OnAcceptHandler(Selector selector, SelectorHandler onMessageHandler, NetCallback onAcceptCallback) {
-        this.selector = selector;
+    public OnAcceptHandler(SelectorHandler onMessageHandler, NetCallback onAcceptCallback) {
         this.onMessageHandler = onMessageHandler;
         this.onAcceptCallback = onAcceptCallback;
     }
@@ -37,8 +32,7 @@ public class OnAcceptHandler implements SelectorHandler{
         if (onMessageHandler == null) return;
         ServerSocketChannel channel = (ServerSocketChannel) key.channel();
         SocketChannel socketChannel = channel.accept();
-        socketChannel.configureBlocking(false);
-        socketChannel.register(selector, SelectionKey.OP_READ, onMessageHandler);
+        onMessageHandler.registerTask(socketChannel);
         if (onAcceptCallback != null) {
             TcpConnection tcpConnection = new TcpConnection(socketChannel, key);
             tcpConnection.reset(socketChannel, key);

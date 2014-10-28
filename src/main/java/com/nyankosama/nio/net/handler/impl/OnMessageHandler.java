@@ -3,21 +3,19 @@ package com.nyankosama.nio.net.handler.impl;
 import com.nyankosama.nio.net.TcpBuffer;
 import com.nyankosama.nio.net.TcpConnection;
 import com.nyankosama.nio.net.callback.NetCallback;
-import com.nyankosama.nio.net.handler.SelectorHandler;
 import com.nyankosama.nio.net.utils.ByteBufferThreadLocal;
 import com.nyankosama.nio.net.utils.NoCopyByteArrayOutputStream;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by hlr@superid.cn on 2014/10/24.
  */
-public class OnMessageHandler implements SelectorHandler{
+public class OnMessageHandler extends AbstractSelectorHandler{
 
     private NetCallback callback;
 
@@ -38,6 +36,21 @@ public class OnMessageHandler implements SelectorHandler{
             workThreads[i] = new InnerWorkThread();
             workThreads[i].start();
         }
+    }
+
+    @Override
+    public Runnable createTask(final SelectableChannel channel) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    channel.register(selector, SelectionKey.OP_READ);
+                } catch (ClosedChannelException e) {
+                    e.printStackTrace();
+                    //FIXME 异常处理
+                }
+            }
+        };
     }
 
     @Override
@@ -93,8 +106,16 @@ public class OnMessageHandler implements SelectorHandler{
     private static class InnerWorkThread extends Thread {
         private BlockingQueue<InnerWork> workQueue;
 
+        private Selector selector;
+
         public InnerWorkThread() {
             this.workQueue = new ArrayBlockingQueue<>(WORK_QUEUE_CAPACITY);
+            try {
+                this.selector = Selector.open();
+            } catch (IOException e) {
+                e.printStackTrace();
+                //FIXME 异常处理
+            }
         }
 
         public void putWork(InnerWork work) {
